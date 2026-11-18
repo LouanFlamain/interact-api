@@ -1,0 +1,22 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+
+[agents.api_engineer]
+description = "Spécialiste de l’API NestJS : routes, DTO, authentification, permissions et publication."
+config_file = "agents/api_engineer.toml"
+
+[agents.realtime_engineer]
+description = "Spécialiste de Yjs/Hocuspocus : WebSocket, CRDT, présence, persistance et reconnexion."
+config_file = "agents/realtime_engineer.toml"
+
+[agents.database_engineer]
+description = "Spécialiste de Prisma/PostgreSQL : schémas, migrations, index et intégrité des données."
+config_file = "agents/database_engineer.toml"
+
+[agents.qa_reviewer]
+description = "Revue indépendante du backend : sécurité, autorisations, persistance et tests."
+config_file = "agents/qa_reviewer.toml"
+
