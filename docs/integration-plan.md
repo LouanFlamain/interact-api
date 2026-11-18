@@ -16,7 +16,7 @@ Ce document est la feuille de route vivante de l’API. Une étape n’est termi
 |---|---|---|---|
 | 0. Socle technique | fait | — | NestJS, TypeScript strict, CQRS, validation HTTP, OpenAPI, `GET /health`, lint et tests passent. |
 | 1. Conventions API | en cours | 0 | Stratégie d’authentification validée ; format d’erreur, pagination, versionnement, convention des identifiants et politique de suppression restants. |
-| 2. Identité et persistance | en cours | 1 | PostgreSQL local disponible ; Prisma, comptes locaux/OAuth, sessions et première migration réversible restent à réaliser. |
+| 2. Identité et persistance | en cours | 1 | PostgreSQL, Prisma et la migration additive d’identité sont en place ; comptes locaux/OAuth, sessions HTTP et e-mails restent à réaliser. |
 | 3. Documents et droits | à faire | 2 | Création, lecture, modification et suppression de CV ; rôles propriétaire/éditeur/lecteur appliqués et scénarios 401/403/404/IDOR couverts. |
 | 4. Contrat documentaire | à faire | 3 | Arbre de nœuds versionné avec `schemaVersion`, validation côté API et contrat communiqué au dépôt frontend. |
 | 5. Collaboration | à faire | 3, 4 | Yjs/Hocuspocus autorisé par document ; persistance des mises à jour ; convergence, reconnexion, lecture seule et redémarrage testés. |
@@ -62,7 +62,7 @@ Critère de fin : ces conventions sont documentées, configurées dans l’API e
 Statut : `en cours`.
 
 - PostgreSQL local est fourni par `compose.yaml`, avec volume persistant, contrôle de santé et secrets temporaires dans `.env` ignoré par Git.
-- Prisma 7 est connecté à PostgreSQL via un module technique Nest et son adaptateur `@prisma/adapter-pg`. Le schéma ne contient encore aucun modèle ni migration métier.
+- Prisma 7 est connecté à PostgreSQL via un module technique Nest et son adaptateur `@prisma/adapter-pg`. La migration `20261118155209_init_identity` contient les comptes, identités externes, sessions et jetons temporaires ; les flux HTTP restent à implémenter.
 - Créer un compte `User` unique ; une identité externe est reliée par un couple unique `(provider, providerSubject)`. Un mot de passe n’existe que pour les comptes ayant choisi le parcours local.
 - Démarrer Google et GitHub avec le flux d’autorisation OIDC/OAuth à code, `state`, `nonce` et PKCE. Ne jamais lier automatiquement deux comptes sur la seule égalité d’e-mail : demander une preuve de contrôle du compte existant.
 - Hacher les mots de passe avec Argon2id. Stocker seulement un vérificateur haché des jetons de session, de vérification d’e-mail et de réinitialisation ; ne jamais journaliser ces secrets.

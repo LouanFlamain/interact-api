@@ -27,7 +27,7 @@ docker compose up -d postgres
 docker compose ps
 ```
 
-La base écoute sur `localhost:5432` par défaut et ses données sont conservées dans le volume Docker `postgres_data`. Prisma est connecté à l’application, mais aucune table ni migration métier n’existe encore.
+La base écoute sur `localhost:5432` par défaut et ses données sont conservées dans le volume Docker `postgres_data`. Prisma est connecté à l’application et la migration initiale crée le socle d’identité ; aucun endpoint d’authentification n’est encore exposé.
 
 ## Scripts
 

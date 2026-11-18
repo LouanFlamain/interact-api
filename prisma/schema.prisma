@@ -6,3 +6,92 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum SystemRole {
+  USER
+  ADMIN
+}
+
+enum ExternalIdentityProvider {
+  GOOGLE
+  GITHUB
+}
+
+enum AuthTokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model User {
+  id              String              @id @default(uuid()) @db.Uuid
+  email           String              @unique @db.VarChar(320)
+  systemRole      SystemRole          @default(USER) @map("system_role")
+  emailVerifiedAt DateTime?           @map("email_verified_at") @db.Timestamptz(3)
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  passwordCredential PasswordCredential?
+  externalIdentities ExternalIdentity[]
+  sessions           AuthSession[]
+  authTokens         AuthToken[]
+
+  @@map("users")
+}
+
+model PasswordCredential {
+  userId       String   @id @map("user_id") @db.Uuid
+  passwordHash String   @map("password_hash") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("password_credentials")
+}
+
+model ExternalIdentity {
+  id              String                   @id @default(uuid()) @db.Uuid
+  userId          String                   @map("user_id") @db.Uuid
+  provider        ExternalIdentityProvider
+  providerSubject String                   @map("provider_subject") @db.VarChar(255)
+  createdAt       DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerSubject])
+  @@index([userId])
+  @@map("external_identities")
+}
+
+model AuthSession {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  verifierHash String    @map("verifier_hash") @db.Char(64)
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastUsedAt   DateTime? @map("last_used_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("auth_sessions")
+}
+
+model AuthToken {
+  id           String           @id @default(uuid()) @db.Uuid
+  userId       String           @map("user_id") @db.Uuid
+  purpose      AuthTokenPurpose
+  verifierHash String           @map("verifier_hash") @db.Char(64)
+  expiresAt    DateTime         @map("expires_at") @db.Timestamptz(3)
+  consumedAt   DateTime?        @map("consumed_at") @db.Timestamptz(3)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+  @@map("auth_tokens")
+}
