@@ -10,7 +10,9 @@ API NestJS de l’éditeur de CV interactifs. Le socle utilise TypeScript strict
 ## Démarrage
 
 ```bash
+docker compose up -d postgres
 npm install
+npm run prisma:generate
 npm run start:dev
 ```
 
@@ -25,7 +27,7 @@ docker compose up -d postgres
 docker compose ps
 ```
 
-La base écoute sur `localhost:5432` par défaut et ses données sont conservées dans le volume Docker `postgres_data`. Elle ne contient encore aucune table : Prisma et la première migration seront ajoutés avec le premier cas d’usage persistant.
+La base écoute sur `localhost:5432` par défaut et ses données sont conservées dans le volume Docker `postgres_data`. Prisma est connecté à l’application, mais aucune table ni migration métier n’existe encore.
 
 ## Scripts
 
@@ -33,7 +35,9 @@ La base écoute sur `localhost:5432` par défaut et ses données sont conservée
 npm run build
 npm run lint
 npm test
+npm run test:integration
 npm run test:e2e
+npm run prisma:validate
 ```
 
 ## Organisation

@@ -62,7 +62,7 @@ Critère de fin : ces conventions sont documentées, configurées dans l’API e
 Statut : `en cours`.
 
 - PostgreSQL local est fourni par `compose.yaml`, avec volume persistant, contrôle de santé et secrets temporaires dans `.env` ignoré par Git.
-- Installer Prisma et connecter PostgreSQL seulement après validation du premier modèle métier.
+- Prisma 7 est connecté à PostgreSQL via un module technique Nest et son adaptateur `@prisma/adapter-pg`. Le schéma ne contient encore aucun modèle ni migration métier.
 - Créer un compte `User` unique ; une identité externe est reliée par un couple unique `(provider, providerSubject)`. Un mot de passe n’existe que pour les comptes ayant choisi le parcours local.
 - Démarrer Google et GitHub avec le flux d’autorisation OIDC/OAuth à code, `state`, `nonce` et PKCE. Ne jamais lier automatiquement deux comptes sur la seule égalité d’e-mail : demander une preuve de contrôle du compte existant.
 - Hacher les mots de passe avec Argon2id. Stocker seulement un vérificateur haché des jetons de session, de vérification d’e-mail et de réinitialisation ; ne jamais journaliser ces secrets.

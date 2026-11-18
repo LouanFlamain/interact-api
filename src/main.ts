@@ -4,6 +4,7 @@ import { configureHttp } from './configure-http.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
   configureHttp(app);
   await app.listen(process.env.PORT ?? 3000);
 }

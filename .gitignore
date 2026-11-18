@@ -6,3 +6,4 @@ coverage/
 !.env.example
 *.tsbuildinfo
 npm-debug.log*
+src/infrastructure/persistence/prisma/generated/
