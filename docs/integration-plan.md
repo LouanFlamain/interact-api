@@ -12,18 +12,18 @@ Ce document est la feuille de route vivante de l’API. Une étape n’est termi
 
 ## Feuille de route
 
-| Étape | Statut | Dépendances | Livrable et critère de fin |
-|---|---|---|---|
-| 0. Socle technique | fait | — | NestJS, TypeScript strict, CQRS, validation HTTP, OpenAPI, `GET /health`, lint et tests passent. |
-| 1. Conventions API | en cours | 0 | Stratégie d’authentification validée ; format d’erreur, pagination, versionnement, convention des identifiants et politique de suppression restants. |
-| 2. Identité et persistance | en cours | 1 | PostgreSQL, Prisma et la migration additive d’identité sont en place ; comptes locaux/OAuth, sessions HTTP et e-mails restent à réaliser. |
-| 3. Documents et droits | à faire | 2 | Création, lecture, modification et suppression de CV ; rôles propriétaire/éditeur/lecteur appliqués et scénarios 401/403/404/IDOR couverts. |
-| 4. Contrat documentaire | à faire | 3 | Arbre de nœuds versionné avec `schemaVersion`, validation côté API et contrat communiqué au dépôt frontend. |
-| 5. Collaboration | à faire | 3, 4 | Yjs/Hocuspocus autorisé par document ; persistance des mises à jour ; convergence, reconnexion, lecture seule et redémarrage testés. |
-| 6. Publication | à faire | 3, 4 | Validation du brouillon et création d’un snapshot immuable, distinct du document collaboratif. |
-| 7. Lecture publique | à faire | 6 | Endpoints publics lisant exclusivement les snapshots publiés ; aucune donnée privée ou brouillon exposé. |
-| 8. Médias | à faire | 3 | Upload, autorisation, stockage, références dans le document et stratégie de nettoyage définis. |
-| 9. Exploitation | à faire | 2 à 8 selon le périmètre | Logs sûrs, métriques, limites, CI, sauvegardes et procédure de restauration documentées et vérifiées. |
+| Étape                      | Statut   | Dépendances              | Livrable et critère de fin                                                                                                                           |
+| -------------------------- | -------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. Socle technique         | fait     | —                        | NestJS, TypeScript strict, CQRS, validation HTTP, OpenAPI, `GET /api/health`, lint et tests passent.                                                 |
+| 1. Conventions API         | en cours | 0                        | Stratégie d’authentification validée ; format d’erreur, pagination, versionnement, convention des identifiants et politique de suppression restants. |
+| 2. Identité et persistance | en cours | 1                        | PostgreSQL, Prisma, comptes locaux, sessions HTTP révocables et e-mails locaux sont en place ; OAuth Google/GitHub reste à réaliser.                 |
+| 3. Documents et droits     | à faire  | 2                        | Création, lecture, modification et suppression de CV ; rôles propriétaire/éditeur/lecteur appliqués et scénarios 401/403/404/IDOR couverts.          |
+| 4. Contrat documentaire    | à faire  | 3                        | Arbre de nœuds versionné avec `schemaVersion`, validation côté API et contrat communiqué au dépôt frontend.                                          |
+| 5. Collaboration           | à faire  | 3, 4                     | Yjs/Hocuspocus autorisé par document ; persistance des mises à jour ; convergence, reconnexion, lecture seule et redémarrage testés.                 |
+| 6. Publication             | à faire  | 3, 4                     | Validation du brouillon et création d’un snapshot immuable, distinct du document collaboratif.                                                       |
+| 7. Lecture publique        | à faire  | 6                        | Endpoints publics lisant exclusivement les snapshots publiés ; aucune donnée privée ou brouillon exposé.                                             |
+| 8. Médias                  | à faire  | 3                        | Upload, autorisation, stockage, références dans le document et stratégie de nettoyage définis.                                                       |
+| 9. Exploitation            | à faire  | 2 à 8 selon le périmètre | Logs sûrs, métriques, limites, CI, sauvegardes et procédure de restauration documentées et vérifiées.                                                |
 
 ## Détail des étapes
 
@@ -33,7 +33,7 @@ Statut : `fait`.
 
 - API NestJS avec modules métier, CQRS et frontières hexagonales.
 - OpenAPI sur `/api` et document JSON sur `/api-json`.
-- `GET /health` vérifié en unitaire et en e2e.
+- `GET /api/health` vérifié en unitaire et en e2e dans l’application exécutée.
 - Tests sous `tests/`, avec une arborescence miroir de `src/`.
 
 ### 1. Conventions API
@@ -62,7 +62,8 @@ Critère de fin : ces conventions sont documentées, configurées dans l’API e
 Statut : `en cours`.
 
 - PostgreSQL local est fourni par `compose.yaml`, avec volume persistant, contrôle de santé et secrets temporaires dans `.env` ignoré par Git.
-- Prisma 7 est connecté à PostgreSQL via un module technique Nest et son adaptateur `@prisma/adapter-pg`. La migration `20261118155209_init_identity` contient les comptes, identités externes, sessions et jetons temporaires ; les flux HTTP restent à implémenter.
+- Prisma 7 est connecté à PostgreSQL via un module technique Nest et son adaptateur `@prisma/adapter-pg`. La migration `20261118155209_init_identity` contient les comptes, identités externes, sessions et jetons temporaires.
+- Les routes locales sont disponibles sous `/api/auth` : inscription, vérification/renvoi d’e-mail, connexion, lecture de la session, déconnexion et réinitialisation de mot de passe. Elles sont validées, protégées contre l’énumération de comptes et limitées en débit. Mailpit sert de boîte locale ; les liens d’e-mail posent le jeton dans le fragment URL pour que le dépôt web le transmette explicitement.
 - Créer un compte `User` unique ; une identité externe est reliée par un couple unique `(provider, providerSubject)`. Un mot de passe n’existe que pour les comptes ayant choisi le parcours local.
 - Démarrer Google et GitHub avec le flux d’autorisation OIDC/OAuth à code, `state`, `nonce` et PKCE. Ne jamais lier automatiquement deux comptes sur la seule égalité d’e-mail : demander une preuve de contrôle du compte existant.
 - Hacher les mots de passe avec Argon2id. Stocker seulement un vérificateur haché des jetons de session, de vérification d’e-mail et de réinitialisation ; ne jamais journaliser ces secrets.
@@ -71,6 +72,10 @@ Statut : `en cours`.
 - Utiliser Prisma pour les commandes d’écriture et les transactions.
 - Placer les projections SQL de lecture, si nécessaires, dans `adapters/out/prisma/read-models/` ; elles sont paramétrées, testées et ne remontent pas de données inutiles.
 - Préparer une migration revue, réversible lorsque possible, et une stratégie de retour arrière.
+
+Contrat à communiquer à `interactive-cv-web` : appeler l’API avec les credentials de session, lire les jetons des fragments des liens e-mail et les envoyer dans le corps des requêtes de confirmation. Aucun secret OAuth n’est à transmettre au frontend.
+
+Travail restant : intégrer Google et GitHub avec le flux d’autorisation OAuth/OIDC à code, `state`, `nonce` et PKCE, après configuration des identifiants fournisseurs et des URL de retour. Ne jamais lier automatiquement deux comptes sur la seule égalité d’e-mail.
 
 Critère de fin : une base neuve peut être migrée ; inscription locale et OAuth créent ou retrouvent le même compte de manière sûre ; une session révoquée est refusée ; `USER` reçoit 403 sur les routes `ADMIN` et les secrets restent hors du dépôt.
 
@@ -128,6 +133,7 @@ Statut : `à faire`.
 - CI : build, lint, tests unitaires, intégration et e2e.
 - Observabilité sans secrets ni contenu de CV dans les logs.
 - Limites de débit et de taille, sauvegardes et procédure de restauration.
+- Avant un déploiement à plusieurs instances : remplacer la limite de débit locale par un stockage partagé, ajouter un quota par compte sans conserver l’e-mail en clair et mettre les e-mails transactionnels dans une outbox/file durable avec retry borné et supervision.
 
 Critère de fin : les contrôles sont automatisés et une procédure de reprise est testée avant un déploiement public.
 

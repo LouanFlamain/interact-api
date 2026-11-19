@@ -1,11 +1,12 @@
 import type { Server } from 'node:http';
 import type { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../../../../../../../src/app.module.js';
 import { configureHttp } from '../../../../../../../src/configure-http.js';
 
-describe('GET /health', () => {
+describe('GET /api/health', () => {
   let app: INestApplication<Server>;
 
   beforeAll(async () => {
@@ -14,7 +15,8 @@ describe('GET /health', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    configureHttp(app);
+    app.setGlobalPrefix('api');
+    configureHttp(app, app.get(ConfigService));
     await app.init();
   });
 
@@ -24,7 +26,7 @@ describe('GET /health', () => {
 
   it('returns the public liveness response', async () => {
     await request(app.getHttpServer())
-      .get('/health')
+      .get('/api/health')
       .expect(200)
       .expect('Content-Type', /json/)
       .expect({ status: 'ok' });
@@ -37,7 +39,7 @@ describe('GET /health', () => {
 
     expect(response.body).toMatchObject({
       paths: {
-        '/health': {
+        '/api/health': {
           get: {
             operationId: 'getHealth',
             responses: {

@@ -21,7 +21,9 @@ describe('PrismaService', () => {
   });
 
   it('connects to PostgreSQL', async () => {
-    const result = await prisma.$queryRaw<Array<{ value: number }>>`SELECT 1 AS value`;
+    const result = await prisma.$queryRaw<
+      Array<{ value: number }>
+    >`SELECT 1 AS value`;
 
     expect(result).toEqual([{ value: 1 }]);
   });
